@@ -123,6 +123,7 @@
         let personFile = null;
         let garmentFile = null;
 
+        // Fonction pour prévisualiser les images
         function previewImage(input, previewId) {
             const file = input.files[0];
             if (!file) return;
@@ -143,70 +144,72 @@
             reader.readAsDataURL(file);
         }
 
+        // Activer/désactiver le bouton
         function updateButtonState() {
             const button = document.getElementById('tryButton');
             button.disabled = !(personFile && garmentFile);
         }
 
+        // Fonction principale d'essayage (AVEC URLs de test)
         async function tryOn() {
-    if (!personFile || !garmentFile) return;
+            if (!personFile || !garmentFile) {
+                alert("Veuillez charger les deux photos");
+                return;
+            }
 
-    const button = document.getElementById('tryButton');
-    const loading = document.getElementById('loading');
-    const errorDiv = document.getElementById('errorMessage');
-    const resultCard = document.getElementById('resultCard');
-    
-    button.disabled = true;
-    loading.classList.remove('hidden');
-    errorDiv.classList.add('hidden');
-    resultCard.classList.add('hidden');
+            const button = document.getElementById('tryButton');
+            const loading = document.getElementById('loading');
+            const errorDiv = document.getElementById('errorMessage');
+            const resultCard = document.getElementById('resultCard');
+            
+            button.disabled = true;
+            loading.classList.remove('hidden');
+            errorDiv.classList.add('hidden');
+            resultCard.classList.add('hidden');
 
-    try {
-        // Convertir les fichiers en base64
-        const personBase64 = await fileToBase64(personFile);
-        const garmentBase64 = await fileToBase64(garmentFile);
+            try {
+                // URLs d'exemple pour tester (images libres de droit)
+                // En conditions réelles, on uploaderait les photos de l'utilisateur
+                const testPersonUrl = "https://images.unsplash.com/photo-1542293787938-c9e299b880cc?w=400";
+                const testGarmentUrl = "https://images.unsplash.com/photo-1523381210434-271e8be1f52b?w=400";
 
-        const response = await fetch('/api/tryon', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify({
-                personImage: personBase64,
-                garmentImage: garmentBase64
-            })
-        });
+                console.log("📤 Envoi à l'API...");
+                
+                const response = await fetch('/api/tryon', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        personImageUrl: testPersonUrl,
+                        garmentImageUrl: testGarmentUrl
+                    })
+                });
 
-        if (!response.ok) {
-            const error = await response.json();
-            throw new Error(error.error || 'Erreur lors de l\'essayage');
+                console.log("📥 Réponse reçue, status:", response.status);
+
+                if (!response.ok) {
+                    const errorText = await response.text();
+                    console.error('❌ Erreur serveur:', errorText);
+                    throw new Error('Erreur serveur: ' + response.status);
+                }
+
+                const data = await response.json();
+                console.log("✅ Données reçues:", data);
+                
+                const resultImage = document.getElementById('resultImage');
+                resultImage.src = data.imageUrl;
+                resultCard.classList.remove('hidden');
+                
+            } catch (error) {
+                errorDiv.textContent = error.message;
+                errorDiv.classList.remove('hidden');
+                console.error('❌ Erreur:', error);
+            } finally {
+                loading.classList.add('hidden');
+                button.disabled = false;
+            }
         }
-
-        const data = await response.json();
-        
-        const resultImage = document.getElementById('resultImage');
-        resultImage.src = data.imageUrl;
-        resultCard.classList.remove('hidden');
-        
-    } catch (error) {
-        errorDiv.textContent = error.message;
-        errorDiv.classList.remove('hidden');
-        console.error('Erreur:', error);
-    } finally {
-        loading.classList.add('hidden');
-        button.disabled = false;
-    }
-}
-
-// Fonction utilitaire pour convertir File en base64
-function fileToBase64(file) {
-    return new Promise((resolve, reject) => {
-        const reader = new FileReader();
-        reader.readAsDataURL(file);
-        reader.onload = () => resolve(reader.result);
-        reader.onerror = error => reject(error);
-    });
-}
     </script>
 </body>
 </html>
