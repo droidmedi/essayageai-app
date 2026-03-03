@@ -18,19 +18,15 @@ module.exports = async (req, res) => {
   try {
     console.log("🚀 ===== DÉBUT DE L'APPEL API =====");
     
-    // Vérification de la clé API
     const apiKey = process.env.FAL_KEY;
     console.log("🔑 Clé API présente?", !!apiKey);
     
     if (!apiKey) {
-      console.error("❌ FAL_KEY n'est pas définie dans les variables d'environnement");
+      console.error("❌ FAL_KEY n'est pas définie");
       return res.status(500).json({ error: 'Configuration API manquante' });
     }
 
-    // Initialisation correcte du client Fal.ai
-    fal.config({
-      credentials: apiKey
-    });
+    fal.config({ credentials: apiKey });
 
     const { personImageUrl, garmentImageUrl } = req.body;
     
@@ -41,11 +37,11 @@ module.exports = async (req, res) => {
       return res.status(400).json({ error: 'URLs des photos manquantes' });
     }
 
-    console.log("🔄 Appel à Fal.ai avec les URLs...");
+    console.log("🔄 Appel à Fal.ai (modèle Kolors)...");
     
-    // Version corrigée de l'appel
+    // CHANGEMENT ICI : Nouveau modèle
     const result = await fal.subscribe({
-      modelId: "fal-ai/image-apps-v2/virtual-try-on",
+      modelId: "fal-ai/kling/v1-5/kolors-virtual-try-on",
       input: {
         person_image_url: personImageUrl,
         clothing_image_url: garmentImageUrl
