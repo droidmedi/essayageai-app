@@ -1,8 +1,8 @@
-// api/tryon.js (suite et fin)
+// api/tryon.js
 const { fal } = require('@fal-ai/client');
 
 module.exports = async (req, res) => {
-    // Configuration CORS
+    // Configuration CORS - CORRIGÉE !
     res.setHeader('Access-Control-Allow-Origin', 'https://app.essayageai.com');
     res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
     res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
@@ -58,7 +58,6 @@ module.exports = async (req, res) => {
         const imageUrl = result.data.images[0].url;
         console.log("✅ Image générée:", imageUrl);
 
-        // ✅ CORRECTION ICI : Renvoyer directement l'URL
         return res.status(200).json({
             imageUrl: imageUrl
         });
