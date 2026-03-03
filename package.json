@@ -1,0 +1,7 @@
+{
+  "name": "essayageai-app",
+  "version": "1.0.0",
+  "dependencies": {
+    "@fal-ai/client": "^1.0.0"
+  }
+}
