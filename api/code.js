@@ -1,4 +1,3 @@
-
 // api/codes.js - Gestionnaire unique des codes
 const crypto = require('crypto');
 
