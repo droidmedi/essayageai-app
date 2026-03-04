@@ -35,17 +35,33 @@
             border-color: #48bb78;
             background-color: #f0fff4;
         }
-        .tip-enter {
-            animation: slideIn 0.3s ease;
+        .offer-card {
+            transition: all 0.3s ease;
         }
-        @keyframes slideIn {
-            from {
-                opacity: 0;
-                transform: translateY(-10px);
-            }
-            to {
-                opacity: 1;
-                transform: translateY(0);
+        .offer-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 12px 24px -8px rgba(0,0,0,0.15);
+        }
+        .offer-card.popular {
+            border-color: #4299e1;
+            border-width: 2px;
+        }
+        .popular-badge {
+            position: absolute;
+            top: -12px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: #4299e1;
+            color: white;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 0.75rem;
+            font-weight: bold;
+            white-space: nowrap;
+        }
+        @media (max-width: 768px) {
+            .offer-card {
+                margin-bottom: 20px;
             }
         }
     </style>
@@ -59,10 +75,11 @@
                     <span class="text-blue-600">👕 Essayage</span><span class="text-gray-800">AI</span>
                 </div>
                 <div class="flex items-center space-x-4">
-                    <span class="text-sm text-gray-600">Crédits: <span id="creditsDisplay">10</span></span>
-                    <a href="#" id="buyCreditsBtn" class="bg-blue-600 text-white px-4 py-2 rounded-lg text-sm hover:bg-blue-700">
+                    <span class="text-sm text-gray-600">Crédits: <span id="creditsDisplay" class="font-bold text-blue-600">0</span></span>
+                    <button onclick="document.getElementById('shopSection').scrollIntoView({ behavior: 'smooth' })" 
+                            class="bg-blue-600 text-white px-4 py-2 rounded-lg text-sm hover:bg-blue-700">
                         Acheter +
-                    </a>
+                    </button>
                 </div>
             </div>
         </div>
@@ -74,21 +91,72 @@
             Essayez vos vêtements <span class="text-blue-600">instantanément</span>
         </h1>
 
-        <!-- Zone des conseils (visible au début) -->
-        <div id="initialTips" class="bg-blue-50 rounded-xl p-4 mb-6">
-            <h3 class="font-bold text-blue-800 mb-2 flex items-center">
-                <svg class="w-5 h-5 mr-2" fill="currentColor" viewBox="0 0 20 20">
-                    <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clip-rule="evenodd"/>
-                </svg>
-                📸 Conseils pour de meilleurs résultats :
-            </h3>
-            <ul class="text-blue-700 text-sm space-y-1">
-                <li>• Placez le vêtement à plat sur un fond clair</li>
-                <li>• Évitez les ombres et les plis</li>
-                <li>• Préférez la lumière naturelle</li>
-                <li>• Tenez-vous droit, visage bien visible</li>
-                <li>• Évitez les vêtements trop amples sur votre photo</li>
-            </ul>
+        <!-- SECTION ACHAT DE CRÉDITS -->
+        <div id="shopSection" class="bg-white rounded-xl shadow-lg p-6 mb-8">
+            <h2 class="text-2xl font-bold mb-4">💰 Acheter des crédits</h2>
+            
+            <!-- Rappel des crédits actuels -->
+            <div class="bg-blue-50 p-4 rounded-lg mb-6 flex justify-between items-center">
+                <span class="font-semibold">Vos crédits actuels :</span>
+                <span id="currentCreditsDisplay" class="text-2xl font-bold text-blue-600">0</span>
+            </div>
+
+            <!-- Offres -->
+            <div class="grid md:grid-cols-3 gap-4 mb-6">
+                <!-- Offre 5 essais -->
+                <div class="border rounded-lg p-4 text-center hover:shadow-lg transition cursor-pointer offer-card relative" 
+                     onclick="selectOffer(5, 3)">
+                    <div class="text-3xl mb-2">🎟️</div>
+                    <div class="text-xl font-bold">5 essais</div>
+                    <div class="text-2xl text-green-600 my-2">3€</div>
+                    <div class="text-sm text-gray-500">0,60€/essai</div>
+                    <button onclick="event.stopPropagation(); buyCredits(5, 3)" 
+                            class="mt-4 bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 w-full transition">
+                        Acheter
+                    </button>
+                </div>
+
+                <!-- Offre 10 essais (populaire) -->
+                <div class="border-2 border-blue-500 rounded-lg p-4 text-center hover:shadow-lg transition cursor-pointer offer-card popular relative" 
+                     onclick="selectOffer(10, 5)">
+                    <div class="popular-badge">POPULAIRE</div>
+                    <div class="text-3xl mb-2">🎟️🎟️</div>
+                    <div class="text-xl font-bold">10 essais</div>
+                    <div class="text-2xl text-green-600 my-2">5€</div>
+                    <div class="text-sm text-gray-500">0,50€/essai</div>
+                    <button onclick="event.stopPropagation(); buyCredits(10, 5)" 
+                            class="mt-4 bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 w-full transition">
+                        Acheter
+                    </button>
+                </div>
+
+                <!-- Offre 20 essais -->
+                <div class="border rounded-lg p-4 text-center hover:shadow-lg transition cursor-pointer offer-card relative" 
+                     onclick="selectOffer(20, 9)">
+                    <div class="text-3xl mb-2">🎟️🎟️🎟️</div>
+                    <div class="text-xl font-bold">20 essais</div>
+                    <div class="text-2xl text-green-600 my-2">9€</div>
+                    <div class="text-sm text-gray-500">0,45€/essai</div>
+                    <button onclick="event.stopPropagation(); buyCredits(20, 9)" 
+                            class="mt-4 bg-purple-600 text-white px-4 py-2 rounded-lg hover:bg-purple-700 w-full transition">
+                        Acheter
+                    </button>
+                </div>
+            </div>
+
+            <!-- Section pour entrer un code -->
+            <div class="border-t pt-4">
+                <h3 class="font-bold mb-2">🔑 Vous avez un code de crédits ?</h3>
+                <div class="flex gap-2">
+                    <input type="text" id="codeInput" placeholder="Entrez votre code (ex: CRED-XXXX-XXXX)" 
+                           class="flex-1 p-2 border rounded-lg focus:ring-2 focus:ring-blue-500">
+                    <button onclick="redeemCode()" 
+                            class="bg-gray-600 text-white px-6 py-2 rounded-lg hover:bg-gray-700 transition whitespace-nowrap">
+                        Valider
+                    </button>
+                </div>
+                <div id="codeMessage" class="mt-2 text-sm min-h-[24px]"></div>
+            </div>
         </div>
 
         <!-- Zone d'upload -->
@@ -135,7 +203,7 @@
             <!-- Message de succès temporaire -->
             <div id="successMessage" class="hidden mt-4 p-4 bg-green-50 text-green-700 rounded-lg text-center"></div>
 
-            <!-- Zone des conseils personnalisés (apparaît après analyse) -->
+            <!-- Conseils personnalisés -->
             <div id="tipsContainer" class="hidden mt-4 p-4 bg-blue-50 rounded-lg tip-enter"></div>
 
             <!-- Bouton d'essai -->
@@ -158,15 +226,12 @@
         <div id="resultCard" class="hidden bg-white rounded-xl shadow-lg p-6">
             <h2 class="text-2xl font-bold mb-4 text-center text-gray-800">✨ Résultat ✨</h2>
             <img id="resultImage" src="" alt="Résultat de l'essayage" class="max-h-[500px] mx-auto rounded-lg shadow-lg">
-            
-            <!-- Conseils post-résultat -->
-            <div id="postResultTips" class="hidden mt-4 p-4 bg-blue-50 rounded-lg text-sm"></div>
-            
             <div class="flex justify-center mt-6 space-x-4">
                 <button onclick="resetUpload()" class="bg-gray-600 text-white px-6 py-2 rounded-lg hover:bg-gray-700 transition">
                     🔄 Nouvel essai
                 </button>
-                <button onclick="window.location.href='#buyCredits'" class="bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700 transition">
+                <button onclick="document.getElementById('shopSection').scrollIntoView({ behavior: 'smooth' })" 
+                        class="bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700 transition">
                     💳 Acheter plus
                 </button>
             </div>
@@ -174,22 +239,21 @@
     </div>
 
     <script>
-        // Variables globales
+        // ===== VARIABLES GLOBALES =====
         let personFile = null;
         let garmentFile = null;
+        let userCredits = localStorage.getItem('credits') ? parseInt(localStorage.getItem('credits')) : 10; // 10 crédits gratuits pour commencer
 
-        // Fonction pour prévisualiser les images
+        // ===== FONCTIONS D'UPLOAD =====
         function previewImage(input, previewId, zoneId) {
             const file = input.files[0];
             if (!file) return;
 
-            // Vérifier que c'est une image
             if (!file.type.startsWith('image/')) {
                 alert('Veuillez sélectionner une image');
                 return;
             }
 
-            // Limiter la taille (optionnel, 5MB max)
             if (file.size > 5 * 1024 * 1024) {
                 alert('L\'image est trop grande (max 5MB)');
                 return;
@@ -200,13 +264,9 @@
                 const preview = document.getElementById(previewId);
                 const zone = document.getElementById(zoneId);
                 
-                // Afficher l'image
                 preview.innerHTML = `<img src="${e.target.result}" class="max-h-[250px] mx-auto rounded-lg" alt="Prévisualisation">`;
-                
-                // Marquer la zone comme ayant une image
                 zone.classList.add('has-image');
                 
-                // Sauvegarder le fichier
                 if (previewId === 'personPreview') {
                     personFile = file;
                 } else {
@@ -214,48 +274,19 @@
                 }
                 
                 updateButtonState();
-                
-                // Afficher des conseils basés sur la taille
-                showSizeTips(file, previewId);
             };
             reader.readAsDataURL(file);
         }
 
-        // Fonction pour afficher des conseils basés sur la taille
-        function showSizeTips(file, previewId) {
-            const sizeKB = file.size / 1024;
-            const tipsContainer = document.getElementById('tipsContainer');
-            
-            let tip = '';
-            if (previewId === 'personPreview') {
-                if (sizeKB < 100) {
-                    tip = '📸 Votre photo est un peu petite. Pour un meilleur résultat, prenez une photo avec plus de détails.';
-                }
-            } else {
-                if (sizeKB < 50) {
-                    tip = '👕 La photo du vêtement est un peu floue. Essayez de la reprendre avec un meilleur éclairage.';
-                }
-            }
-            
-            if (tip) {
-                tipsContainer.innerHTML = `<p class="text-blue-700">${tip}</p>`;
-                tipsContainer.classList.remove('hidden');
-                setTimeout(() => tipsContainer.classList.add('hidden'), 5000);
-            }
-        }
-
-        // Activer/désactiver le bouton selon que les 2 photos sont chargées
         function updateButtonState() {
             const button = document.getElementById('tryButton');
             button.disabled = !(personFile && garmentFile);
         }
 
-        // Réinitialiser l'upload pour un nouvel essai
         function resetUpload() {
             personFile = null;
             garmentFile = null;
             
-            // Réinitialiser les prévisualisations
             document.getElementById('personPreview').innerHTML = `
                 <div class="text-gray-400">
                     <svg class="w-20 h-20 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -263,7 +294,7 @@
                               d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/>
                     </svg>
                     <p class="font-medium text-lg">Votre photo</p>
-                    <p class="text-sm">Cliquez pour charger (selfie, portrait...)</p>
+                    <p class="text-sm">Cliquez pour charger</p>
                 </div>
             `;
             
@@ -274,114 +305,151 @@
                               d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/>
                     </svg>
                     <p class="font-medium text-lg">Le vêtement</p>
-                    <p class="text-sm">Cliquez pour charger (chemise, pantalon...)</p>
+                    <p class="text-sm">Cliquez pour charger</p>
                 </div>
             `;
             
-            // Réinitialiser les zones
             document.getElementById('personZone').classList.remove('has-image');
             document.getElementById('garmentZone').classList.remove('has-image');
-            
-            // Cacher le résultat et les conseils
             document.getElementById('resultCard').classList.add('hidden');
             document.getElementById('tipsContainer').classList.add('hidden');
-            document.getElementById('postResultTips').classList.add('hidden');
             
             updateButtonState();
         }
 
-        // Fonction pour convertir un fichier en Base64
+        // ===== GESTION DES CRÉDITS =====
+        function updateCreditsDisplay() {
+            document.getElementById('creditsDisplay').textContent = userCredits;
+            document.getElementById('currentCreditsDisplay').textContent = userCredits;
+            localStorage.setItem('credits', userCredits);
+        }
+
+        function selectOffer(credits, price) {
+            console.log(`Offre sélectionnée: ${credits} essais pour ${price}€`);
+            // Google Analytics si disponible
+            if (typeof gtag !== 'undefined') {
+                gtag('event', 'select_offer', { credits, price });
+            }
+        }
+
+        async function buyCredits(credits, price) {
+            try {
+                const response = await fetch('/api/create-payment', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ credits, price, plan: `${credits}credits` })
+                });
+
+                const data = await response.json();
+                
+                if (response.ok && data.paypalUrl) {
+                    window.location.href = data.paypalUrl;
+                } else {
+                    alert("Erreur lors de la création du paiement");
+                }
+            } catch (error) {
+                console.error("Erreur:", error);
+                alert("Erreur de connexion");
+            }
+        }
+
+        async function redeemCode() {
+            const code = document.getElementById('codeInput').value.trim();
+            const messageDiv = document.getElementById('codeMessage');
+            
+            if (!code) {
+                messageDiv.innerHTML = '<span class="text-red-600">✗ Veuillez entrer un code</span>';
+                return;
+            }
+
+            try {
+                const response = await fetch('/api/redeem-code', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ code })
+                });
+
+                const data = await response.json();
+
+                if (response.ok) {
+                    userCredits += data.credits;
+                    updateCreditsDisplay();
+                    messageDiv.innerHTML = `<span class="text-green-600">✓ ${data.message} ! Il vous reste ${userCredits} crédits.</span>`;
+                    document.getElementById('codeInput').value = '';
+                    
+                    setTimeout(() => {
+                        messageDiv.innerHTML = '';
+                    }, 5000);
+                } else {
+                    messageDiv.innerHTML = `<span class="text-red-600">✗ ${data.error}</span>`;
+                }
+            } catch (error) {
+                messageDiv.innerHTML = '<span class="text-red-600">✗ Erreur de connexion</span>';
+            }
+        }
+
+        // ===== FONCTION D'ESSAYAGE =====
         function fileToBase64(file) {
             return new Promise((resolve, reject) => {
                 const reader = new FileReader();
                 reader.readAsDataURL(file);
                 reader.onload = () => resolve(reader.result);
-                reader.onerror = (error) => reject(error);
+                reader.onerror = reject;
             });
         }
 
-        // Fonction principale d'essayage
         async function tryOn() {
             if (!personFile || !garmentFile) {
                 alert("Veuillez charger les deux photos");
                 return;
             }
 
+            // Vérification des crédits
+            if (userCredits < 1) {
+                alert("❌ Crédits insuffisants ! Achetez des crédits pour continuer.");
+                document.getElementById('shopSection').scrollIntoView({ behavior: 'smooth' });
+                return;
+            }
+
             const button = document.getElementById('tryButton');
             const loading = document.getElementById('loading');
             const errorDiv = document.getElementById('errorMessage');
-            const successDiv = document.getElementById('successMessage');
             const resultCard = document.getElementById('resultCard');
-            const tipsContainer = document.getElementById('tipsContainer');
-            const postResultTips = document.getElementById('postResultTips');
             
             button.disabled = true;
             loading.classList.remove('hidden');
             errorDiv.classList.add('hidden');
-            successDiv.classList.add('hidden');
             resultCard.classList.add('hidden');
-            tipsContainer.classList.add('hidden');
-            postResultTips.classList.add('hidden');
 
             try {
-                console.log("📤 Conversion des photos en Base64...");
                 const personBase64 = await fileToBase64(personFile);
                 const garmentBase64 = await fileToBase64(garmentFile);
 
-                console.log("📤 Envoi à l'API...");
                 const response = await fetch('/api/tryon', {
                     method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify({
-                        personImageBase64: personBase64,
-                        garmentImageBase64: garmentBase64
-                    })
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ personImageBase64: personBase64, garmentImageBase64: garmentBase64 })
                 });
 
-                console.log("📥 Réponse reçue, status:", response.status);
-                
                 const data = await response.json();
-                
+
                 if (!response.ok) {
                     throw new Error(data.error || `Erreur serveur: ${response.status}`);
                 }
 
-                console.log("✅ Image générée:", data.imageUrl);
-                
-                // Afficher le résultat
-                const resultImage = document.getElementById('resultImage');
-                resultImage.src = data.imageUrl;
+                // Déduire un crédit
+                userCredits--;
+                updateCreditsDisplay();
+
+                document.getElementById('resultImage').src = data.imageUrl;
                 resultCard.classList.remove('hidden');
                 
-                // Afficher les conseils si présents
-                if (data.tips) {
-                    let tipsHTML = '<h4 class="font-bold text-blue-800 mb-2">💡 Conseils personnalisés :</h4>';
-                    
-                    if (data.tips.person && data.tips.person.length > 0) {
-                        data.tips.person.forEach(tip => {
-                            tipsHTML += `<p class="text-blue-700 text-sm mb-1">${tip}</p>`;
-                        });
-                    }
-                    if (data.tips.garment && data.tips.garment.length > 0) {
-                        data.tips.garment.forEach(tip => {
-                            tipsHTML += `<p class="text-blue-700 text-sm mb-1">${tip}</p>`;
-                        });
-                    }
-                    
-                    postResultTips.innerHTML = tipsHTML;
-                    postResultTips.classList.remove('hidden');
-                }
-                
-                // Message de succès
-                successDiv.textContent = "✨ Essayage réussi !";
-                successDiv.classList.remove('hidden');
-                setTimeout(() => successDiv.classList.add('hidden'), 3000);
-                
+                document.getElementById('successMessage').textContent = "✨ Essayage réussi !";
+                document.getElementById('successMessage').classList.remove('hidden');
+                setTimeout(() => document.getElementById('successMessage').classList.add('hidden'), 3000);
+
             } catch (error) {
-                console.error("❌ Erreur:", error);
-                errorDiv.textContent = error.message || "Une erreur est survenue. Veuillez réessayer.";
+                errorDiv.textContent = error.message;
                 errorDiv.classList.remove('hidden');
             } finally {
                 loading.classList.add('hidden');
@@ -389,10 +457,9 @@
             }
         }
 
-        // Gestionnaire pour l'achat de crédits (à implémenter plus tard)
-        document.getElementById('buyCreditsBtn').addEventListener('click', (e) => {
-            e.preventDefault();
-            alert("Fonctionnalité d'achat bientôt disponible !");
+        // ===== INITIALISATION =====
+        document.addEventListener('DOMContentLoaded', function() {
+            updateCreditsDisplay();
         });
     </script>
 </body>
