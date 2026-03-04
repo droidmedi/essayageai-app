@@ -1,11 +1,11 @@
 // api/paypal-webhook.js
 const crypto = require('crypto');
 
-// Stockage temporaire des codes
+// Stockage des codes (temporaire)
 const codesDB = {};
 
 module.exports = async (req, res) => {
-  // Configuration CORS
+  // CORS
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
   
@@ -13,46 +13,28 @@ module.exports = async (req, res) => {
   if (req.method !== 'POST') return res.status(405).json({ error: 'Méthode non autorisée' });
 
   try {
-    const paymentData = req.body;
-    console.log("✅ Notification PayPal reçue:", paymentData);
-
-    const { item_name, mc_gross, payer_email, tx } = paymentData;
+    // PayPal envoie les données
+    const { item_name, payer_email } = req.body;
     
-    if (!item_name || !mc_gross || !payer_email) {
-      throw new Error("Données de paiement incomplètes");
-    }
-
-    const triesMatch = item_name.match(/(\d+)/);
-    if (!triesMatch) throw new Error("Impossible de déterminer le nombre d'essais");
-    
-    const tries = parseInt(triesMatch[0]);
+    // Extraire le nombre d'essais
+    const tries = parseInt(item_name?.match(/(\d+)/)?.[0] || 0);
+    if (!tries) throw new Error("Nombre d'essais invalide");
 
     // Générer un code unique
     const code = 'ESSAI-' + crypto.randomBytes(4).toString('hex').toUpperCase();
     
-    // Stocker le code
-    codesDB[code] = {
-      tries,
-      email: payer_email,
-      used: false,
-      createdAt: new Date(),
-      paymentId: tx || 'unknown',
-      amount: mc_gross
-    };
+    // Sauvegarder le code
+    codesDB[code] = { tries, email: payer_email, used: false };
 
-    console.log(`✅ Code généré: ${code} pour ${tries} essais`);
+    console.log(`✅ Code généré: ${code} (${tries} essais)`);
 
-    res.status(200).json({ 
-      success: true,
-      code: code,
-      tries: tries
-    });
+    res.json({ success: true, code, tries });
 
   } catch (error) {
-    console.error('❌ Erreur webhook:', error);
+    console.error('❌ Erreur:', error);
     res.status(500).json({ error: error.message });
   }
 };
 
-// Exposer codesDB pour les autres fichiers
+// Export pour les autres fichiers
 module.exports.codesDB = codesDB;
