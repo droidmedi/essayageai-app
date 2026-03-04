@@ -239,7 +239,11 @@
         // ===== VARIABLES GLOBALES =====
         let personFile = null;
         let garmentFile = null;
-        let userTries = localStorage.getItem('tries') ? parseInt(localStorage.getItem('tries')) : 0; // 0 essai gratuit au début
+        
+        // 🧪 MODE TEST : 10 essais fixes pour les tests
+        // Après les tests, remets la ligne commentée ci-dessous
+        let userTries = 10; // ← Valeur de test
+        // let userTries = localStorage.getItem('tries') ? parseInt(localStorage.getItem('tries')) : 0; // ← Version production
 
         // ===== FONCTIONS D'UPLOAD =====
         function previewImage(input, previewId, zoneId) {
@@ -399,12 +403,15 @@
                 return;
             }
 
-            // Vérification des essais
+            // 🧪 MODE TEST : Vérification des essais désactivée
+            // Après les tests, remets le bloc ci-dessous
+            /*
             if (userTries < 1) {
                 alert("❌ Plus d'essais ! Achetez un code pour continuer.");
                 document.getElementById('shopSection').scrollIntoView({ behavior: 'smooth' });
                 return;
             }
+            */
 
             const button = document.getElementById('tryButton');
             const loading = document.getElementById('loading');
@@ -435,9 +442,10 @@
                     throw new Error(data.error || `Erreur serveur: ${response.status}`);
                 }
 
-                // Déduire un essai
-                userTries--;
-                updateTriesDisplay();
+                // 🧪 MODE TEST : Pas de déduction d'essai
+                // Après les tests, remets les lignes ci-dessous
+                // userTries--;
+                // updateTriesDisplay();
 
                 document.getElementById('resultImage').src = data.imageUrl;
                 resultCard.classList.remove('hidden');
