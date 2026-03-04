@@ -333,7 +333,7 @@
 
         async function buyTries(tries, price) {
             try {
-                const response = await fetch('/api/create-payment', {
+                const response = await fetch('/api/codes?type=generate', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ tries, price, plan: `${tries}essais` })
@@ -362,7 +362,7 @@
             }
 
             try {
-                const response = await fetch('/api/redeem-code', {
+                const response = await fetch('/api/codes?type=redeem', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ code })
