@@ -13,6 +13,7 @@
             width: 40px;
             height: 40px;
             animation: spin 1s linear infinite;
+            margin: 20px auto;
         }
         @keyframes spin {
             0% { transform: rotate(0deg); }
@@ -20,10 +21,19 @@
         }
         .upload-zone {
             transition: all 0.3s ease;
+            min-height: 280px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
         }
         .upload-zone:hover {
             border-color: #4299e1;
             background-color: #f7fafc;
+        }
+        .upload-zone.has-image {
+            border-style: solid;
+            border-color: #48bb78;
+            background-color: #f0fff4;
         }
     </style>
 </head>
@@ -37,7 +47,7 @@
                 </div>
                 <div class="flex items-center space-x-4">
                     <span class="text-sm text-gray-600">Crédits: <span id="creditsDisplay">10</span></span>
-                    <a href="#pricing" class="bg-blue-600 text-white px-4 py-2 rounded-lg text-sm hover:bg-blue-700">
+                    <a href="#" id="buyCreditsBtn" class="bg-blue-600 text-white px-4 py-2 rounded-lg text-sm hover:bg-blue-700">
                         Acheter +
                     </a>
                 </div>
@@ -55,33 +65,35 @@
         <div class="bg-white rounded-xl shadow-lg p-6 mb-8">
             <div class="grid md:grid-cols-2 gap-6">
                 <!-- Photo personne -->
-                <div class="border-2 border-dashed border-gray-300 rounded-xl p-6 text-center upload-zone cursor-pointer"
+                <div id="personZone" 
+                     class="border-2 border-dashed border-gray-300 rounded-xl p-4 text-center upload-zone cursor-pointer"
                      onclick="document.getElementById('personInput').click()">
-                    <input type="file" id="personInput" accept="image/*" class="hidden" onchange="previewImage(this, 'personPreview')">
-                    <div id="personPreview" class="min-h-[250px] flex items-center justify-center">
+                    <input type="file" id="personInput" accept="image/*" class="hidden" onchange="previewImage(this, 'personPreview', 'personZone')">
+                    <div id="personPreview" class="w-full">
                         <div class="text-gray-400">
                             <svg class="w-20 h-20 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" 
                                       d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/>
                             </svg>
-                            <p class="font-medium">Votre photo</p>
-                            <p class="text-sm">Cliquez pour charger</p>
+                            <p class="font-medium text-lg">Votre photo</p>
+                            <p class="text-sm">Cliquez pour charger (selfie, portrait...)</p>
                         </div>
                     </div>
                 </div>
 
                 <!-- Photo vêtement -->
-                <div class="border-2 border-dashed border-gray-300 rounded-xl p-6 text-center upload-zone cursor-pointer"
+                <div id="garmentZone" 
+                     class="border-2 border-dashed border-gray-300 rounded-xl p-4 text-center upload-zone cursor-pointer"
                      onclick="document.getElementById('garmentInput').click()">
-                    <input type="file" id="garmentInput" accept="image/*" class="hidden" onchange="previewImage(this, 'garmentPreview')">
-                    <div id="garmentPreview" class="min-h-[250px] flex items-center justify-center">
+                    <input type="file" id="garmentInput" accept="image/*" class="hidden" onchange="previewImage(this, 'garmentPreview', 'garmentZone')">
+                    <div id="garmentPreview" class="w-full">
                         <div class="text-gray-400">
                             <svg class="w-20 h-20 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" 
                                       d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/>
                             </svg>
-                            <p class="font-medium">Le vêtement</p>
-                            <p class="text-sm">Cliquez pour charger</p>
+                            <p class="font-medium text-lg">Le vêtement</p>
+                            <p class="text-sm">Cliquez pour charger (chemise, pantalon...)</p>
                         </div>
                     </div>
                 </div>
@@ -90,49 +102,74 @@
             <!-- Message d'erreur -->
             <div id="errorMessage" class="hidden mt-4 p-4 bg-red-50 text-red-700 rounded-lg text-center"></div>
 
+            <!-- Message de succès temporaire -->
+            <div id="successMessage" class="hidden mt-4 p-4 bg-green-50 text-green-700 rounded-lg text-center"></div>
+
             <!-- Bouton d'essai -->
             <button id="tryButton" onclick="tryOn()" disabled
                     class="mt-6 w-full bg-blue-600 text-white py-4 px-6 rounded-xl font-bold text-lg 
-                           disabled:bg-gray-400 hover:bg-blue-700 transition transform hover:scale-105">
+                           disabled:bg-gray-400 hover:bg-blue-700 transition transform hover:scale-105 
+                           focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-opacity-50">
                 ✨ Essayer ce vêtement (1 crédit)
             </button>
 
             <!-- Loading -->
             <div id="loading" class="hidden mt-8 flex flex-col items-center">
-                <div class="loading-spinner mb-4"></div>
-                <p class="text-gray-600">Génération en cours... (quelques secondes)</p>
+                <div class="loading-spinner"></div>
+                <p class="text-gray-600 mt-4">Génération en cours... (quelques secondes)</p>
+                <p class="text-gray-500 text-sm mt-2">L'IA analyse vos photos</p>
             </div>
         </div>
 
         <!-- Résultat -->
         <div id="resultCard" class="hidden bg-white rounded-xl shadow-lg p-6">
-            <h2 class="text-2xl font-bold mb-4 text-center">Résultat</h2>
-            <img id="resultImage" src="" alt="Résultat de l'essayage" class="max-h-[500px] mx-auto rounded-lg shadow-md">
-            <div class="flex justify-center mt-4 space-x-4">
-                <button onclick="window.location.href='#upload'" class="bg-gray-600 text-white px-6 py-2 rounded-lg hover:bg-gray-700">
-                    Essayer un autre
+            <h2 class="text-2xl font-bold mb-4 text-center text-gray-800">✨ Résultat ✨</h2>
+            <img id="resultImage" src="" alt="Résultat de l'essayage" class="max-h-[500px] mx-auto rounded-lg shadow-lg">
+            <div class="flex justify-center mt-6 space-x-4">
+                <button onclick="resetUpload()" class="bg-gray-600 text-white px-6 py-2 rounded-lg hover:bg-gray-700 transition">
+                    🔄 Nouvel essai
                 </button>
-                <button onclick="window.location.href='#pricing'" class="bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700">
-                    Acheter plus
+                <button onclick="window.location.href='#buyCredits'" class="bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700 transition">
+                    💳 Acheter plus
                 </button>
             </div>
         </div>
     </div>
 
     <script>
+        // Variables globales
         let personFile = null;
         let garmentFile = null;
 
         // Fonction pour prévisualiser les images
-        function previewImage(input, previewId) {
+        function previewImage(input, previewId, zoneId) {
             const file = input.files[0];
             if (!file) return;
+
+            // Vérifier que c'est une image
+            if (!file.type.startsWith('image/')) {
+                alert('Veuillez sélectionner une image');
+                return;
+            }
+
+            // Limiter la taille (optionnel, 5MB max)
+            if (file.size > 5 * 1024 * 1024) {
+                alert('L\'image est trop grande (max 5MB)');
+                return;
+            }
 
             const reader = new FileReader();
             reader.onload = (e) => {
                 const preview = document.getElementById(previewId);
+                const zone = document.getElementById(zoneId);
+                
+                // Afficher l'image
                 preview.innerHTML = `<img src="${e.target.result}" class="max-h-[250px] mx-auto rounded-lg" alt="Prévisualisation">`;
                 
+                // Marquer la zone comme ayant une image
+                zone.classList.add('has-image');
+                
+                // Sauvegarder le fichier
                 if (previewId === 'personPreview') {
                     personFile = file;
                 } else {
@@ -144,13 +181,61 @@
             reader.readAsDataURL(file);
         }
 
-        // Activer/désactiver le bouton
+        // Activer/désactiver le bouton selon que les 2 photos sont chargées
         function updateButtonState() {
             const button = document.getElementById('tryButton');
             button.disabled = !(personFile && garmentFile);
         }
 
-        // Fonction principale d'essayage (AVEC URLs de test)
+        // Réinitialiser l'upload pour un nouvel essai
+        function resetUpload() {
+            personFile = null;
+            garmentFile = null;
+            
+            // Réinitialiser les prévisualisations
+            document.getElementById('personPreview').innerHTML = `
+                <div class="text-gray-400">
+                    <svg class="w-20 h-20 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" 
+                              d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/>
+                    </svg>
+                    <p class="font-medium text-lg">Votre photo</p>
+                    <p class="text-sm">Cliquez pour charger (selfie, portrait...)</p>
+                </div>
+            `;
+            
+            document.getElementById('garmentPreview').innerHTML = `
+                <div class="text-gray-400">
+                    <svg class="w-20 h-20 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" 
+                              d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/>
+                    </svg>
+                    <p class="font-medium text-lg">Le vêtement</p>
+                    <p class="text-sm">Cliquez pour charger (chemise, pantalon...)</p>
+                </div>
+            `;
+            
+            // Réinitialiser les zones
+            document.getElementById('personZone').classList.remove('has-image');
+            document.getElementById('garmentZone').classList.remove('has-image');
+            
+            // Cacher le résultat
+            document.getElementById('resultCard').classList.add('hidden');
+            
+            updateButtonState();
+        }
+
+        // Fonction pour convertir un fichier en Base64
+        function fileToBase64(file) {
+            return new Promise((resolve, reject) => {
+                const reader = new FileReader();
+                reader.readAsDataURL(file);
+                reader.onload = () => resolve(reader.result);
+                reader.onerror = (error) => reject(error);
+            });
+        }
+
+        // Fonction principale d'essayage
         async function tryOn() {
             if (!personFile || !garmentFile) {
                 alert("Veuillez charger les deux photos");
@@ -160,56 +245,68 @@
             const button = document.getElementById('tryButton');
             const loading = document.getElementById('loading');
             const errorDiv = document.getElementById('errorMessage');
+            const successDiv = document.getElementById('successMessage');
             const resultCard = document.getElementById('resultCard');
             
             button.disabled = true;
             loading.classList.remove('hidden');
             errorDiv.classList.add('hidden');
+            successDiv.classList.add('hidden');
             resultCard.classList.add('hidden');
 
             try {
-                // URLs d'exemple pour tester (images libres de droit)
-                // En conditions réelles, on uploaderait les photos de l'utilisateur
-                const testPersonUrl = "https://images.unsplash.com/photo-1542293787938-c9e299b880cc?w=400";
-                const testGarmentUrl = "https://images.unsplash.com/photo-1523381210434-271e8be1f52b?w=400";
+                console.log("📤 Conversion des photos en Base64...");
+                // Convertir les fichiers en Base64
+                const personBase64 = await fileToBase64(personFile);
+                const garmentBase64 = await fileToBase64(garmentFile);
 
                 console.log("📤 Envoi à l'API...");
-                
                 const response = await fetch('/api/tryon', {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json'
                     },
                     body: JSON.stringify({
-                        personImageUrl: testPersonUrl,
-                        garmentImageUrl: testGarmentUrl
+                        personImageBase64: personBase64,
+                        garmentImageBase64: garmentBase64
                     })
                 });
 
                 console.log("📥 Réponse reçue, status:", response.status);
-
+                
+                const data = await response.json();
+                
                 if (!response.ok) {
-                    const errorText = await response.text();
-                    console.error('❌ Erreur serveur:', errorText);
-                    throw new Error('Erreur serveur: ' + response.status);
+                    throw new Error(data.error || `Erreur serveur: ${response.status}`);
                 }
 
-                const data = await response.json();
-                console.log("✅ Données reçues:", data);
+                console.log("✅ Image générée:", data.imageUrl);
                 
+                // Afficher le résultat
                 const resultImage = document.getElementById('resultImage');
                 resultImage.src = data.imageUrl;
                 resultCard.classList.remove('hidden');
                 
+                // Message de succès temporaire
+                successDiv.textContent = "✨ Essayage réussi !";
+                successDiv.classList.remove('hidden');
+                setTimeout(() => successDiv.classList.add('hidden'), 3000);
+                
             } catch (error) {
-                errorDiv.textContent = error.message;
+                console.error("❌ Erreur:", error);
+                errorDiv.textContent = error.message || "Une erreur est survenue. Veuillez réessayer.";
                 errorDiv.classList.remove('hidden');
-                console.error('❌ Erreur:', error);
             } finally {
                 loading.classList.add('hidden');
                 button.disabled = false;
             }
         }
+
+        // Gestionnaire pour l'achat de crédits (à implémenter plus tard)
+        document.getElementById('buyCreditsBtn').addEventListener('click', (e) => {
+            e.preventDefault();
+            alert("Fonctionnalité d'achat bientôt disponible !");
+        });
     </script>
 </body>
 </html>
