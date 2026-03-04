@@ -75,7 +75,7 @@
                     <span class="text-blue-600">👕 Essayage</span><span class="text-gray-800">AI</span>
                 </div>
                 <div class="flex items-center space-x-4">
-                    <span class="text-sm text-gray-600">Crédits: <span id="creditsDisplay" class="font-bold text-blue-600">0</span></span>
+                    <span class="text-sm text-gray-600">Essais: <span id="triesDisplay" class="font-bold text-blue-600">0</span></span>
                     <button onclick="document.getElementById('shopSection').scrollIntoView({ behavior: 'smooth' })" 
                             class="bg-blue-600 text-white px-4 py-2 rounded-lg text-sm hover:bg-blue-700">
                         Acheter +
@@ -91,14 +91,14 @@
             Essayez vos vêtements <span class="text-blue-600">instantanément</span>
         </h1>
 
-        <!-- SECTION ACHAT DE CRÉDITS -->
+        <!-- SECTION ACHAT D'ESSAIS -->
         <div id="shopSection" class="bg-white rounded-xl shadow-lg p-6 mb-8">
-            <h2 class="text-2xl font-bold mb-4">💰 Acheter des crédits</h2>
+            <h2 class="text-2xl font-bold mb-4">💰 Acheter des essais</h2>
             
-            <!-- Rappel des crédits actuels -->
+            <!-- Rappel des essais restants -->
             <div class="bg-blue-50 p-4 rounded-lg mb-6 flex justify-between items-center">
-                <span class="font-semibold">Vos crédits actuels :</span>
-                <span id="currentCreditsDisplay" class="text-2xl font-bold text-blue-600">0</span>
+                <span class="font-semibold">Vos essais restants :</span>
+                <span id="currentTriesDisplay" class="text-2xl font-bold text-blue-600">0</span>
             </div>
 
             <!-- Offres -->
@@ -110,7 +110,7 @@
                     <div class="text-xl font-bold">5 essais</div>
                     <div class="text-2xl text-green-600 my-2">3€</div>
                     <div class="text-sm text-gray-500">0,60€/essai</div>
-                    <button onclick="event.stopPropagation(); buyCredits(5, 3)" 
+                    <button onclick="event.stopPropagation(); buyTries(5, 3)" 
                             class="mt-4 bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 w-full transition">
                         Acheter
                     </button>
@@ -124,7 +124,7 @@
                     <div class="text-xl font-bold">10 essais</div>
                     <div class="text-2xl text-green-600 my-2">5€</div>
                     <div class="text-sm text-gray-500">0,50€/essai</div>
-                    <button onclick="event.stopPropagation(); buyCredits(10, 5)" 
+                    <button onclick="event.stopPropagation(); buyTries(10, 5)" 
                             class="mt-4 bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 w-full transition">
                         Acheter
                     </button>
@@ -137,7 +137,7 @@
                     <div class="text-xl font-bold">20 essais</div>
                     <div class="text-2xl text-green-600 my-2">9€</div>
                     <div class="text-sm text-gray-500">0,45€/essai</div>
-                    <button onclick="event.stopPropagation(); buyCredits(20, 9)" 
+                    <button onclick="event.stopPropagation(); buyTries(20, 9)" 
                             class="mt-4 bg-purple-600 text-white px-4 py-2 rounded-lg hover:bg-purple-700 w-full transition">
                         Acheter
                     </button>
@@ -146,9 +146,9 @@
 
             <!-- Section pour entrer un code -->
             <div class="border-t pt-4">
-                <h3 class="font-bold mb-2">🔑 Vous avez un code de crédits ?</h3>
+                <h3 class="font-bold mb-2">🔑 Vous avez acheté un code ?</h3>
                 <div class="flex gap-2">
-                    <input type="text" id="codeInput" placeholder="Entrez votre code (ex: CRED-XXXX-XXXX)" 
+                    <input type="text" id="codeInput" placeholder="Entrez votre code (ex: ESSAI-XXXX-XXXX)" 
                            class="flex-1 p-2 border rounded-lg focus:ring-2 focus:ring-blue-500">
                     <button onclick="redeemCode()" 
                             class="bg-gray-600 text-white px-6 py-2 rounded-lg hover:bg-gray-700 transition whitespace-nowrap">
@@ -203,15 +203,12 @@
             <!-- Message de succès temporaire -->
             <div id="successMessage" class="hidden mt-4 p-4 bg-green-50 text-green-700 rounded-lg text-center"></div>
 
-            <!-- Conseils personnalisés -->
-            <div id="tipsContainer" class="hidden mt-4 p-4 bg-blue-50 rounded-lg tip-enter"></div>
-
             <!-- Bouton d'essai -->
             <button id="tryButton" onclick="tryOn()" disabled
                     class="mt-6 w-full bg-blue-600 text-white py-4 px-6 rounded-xl font-bold text-lg 
                            disabled:bg-gray-400 hover:bg-blue-700 transition transform hover:scale-105 
                            focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-opacity-50">
-                ✨ Essayer ce vêtement (1 crédit)
+                ✨ Essayer ce vêtement (1 essai)
             </button>
 
             <!-- Loading -->
@@ -242,7 +239,7 @@
         // ===== VARIABLES GLOBALES =====
         let personFile = null;
         let garmentFile = null;
-        let userCredits = localStorage.getItem('credits') ? parseInt(localStorage.getItem('credits')) : 10; // 10 crédits gratuits pour commencer
+        let userTries = localStorage.getItem('tries') ? parseInt(localStorage.getItem('tries')) : 0; // 0 essai gratuit au début
 
         // ===== FONCTIONS D'UPLOAD =====
         function previewImage(input, previewId, zoneId) {
@@ -312,32 +309,30 @@
             document.getElementById('personZone').classList.remove('has-image');
             document.getElementById('garmentZone').classList.remove('has-image');
             document.getElementById('resultCard').classList.add('hidden');
-            document.getElementById('tipsContainer').classList.add('hidden');
             
             updateButtonState();
         }
 
-        // ===== GESTION DES CRÉDITS =====
-        function updateCreditsDisplay() {
-            document.getElementById('creditsDisplay').textContent = userCredits;
-            document.getElementById('currentCreditsDisplay').textContent = userCredits;
-            localStorage.setItem('credits', userCredits);
+        // ===== GESTION DES ESSAIS =====
+        function updateTriesDisplay() {
+            document.getElementById('triesDisplay').textContent = userTries;
+            document.getElementById('currentTriesDisplay').textContent = userTries;
+            localStorage.setItem('tries', userTries);
         }
 
-        function selectOffer(credits, price) {
-            console.log(`Offre sélectionnée: ${credits} essais pour ${price}€`);
-            // Google Analytics si disponible
+        function selectOffer(tries, price) {
+            console.log(`Offre sélectionnée: ${tries} essais pour ${price}€`);
             if (typeof gtag !== 'undefined') {
-                gtag('event', 'select_offer', { credits, price });
+                gtag('event', 'select_offer', { tries, price });
             }
         }
 
-        async function buyCredits(credits, price) {
+        async function buyTries(tries, price) {
             try {
                 const response = await fetch('/api/create-payment', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ credits, price, plan: `${credits}credits` })
+                    body: JSON.stringify({ tries, price, plan: `${tries}essais` })
                 });
 
                 const data = await response.json();
@@ -372,9 +367,9 @@
                 const data = await response.json();
 
                 if (response.ok) {
-                    userCredits += data.credits;
-                    updateCreditsDisplay();
-                    messageDiv.innerHTML = `<span class="text-green-600">✓ ${data.message} ! Il vous reste ${userCredits} crédits.</span>`;
+                    userTries += data.tries;
+                    updateTriesDisplay();
+                    messageDiv.innerHTML = `<span class="text-green-600">✓ ${data.message} ! Il vous reste ${userTries} essais.</span>`;
                     document.getElementById('codeInput').value = '';
                     
                     setTimeout(() => {
@@ -404,9 +399,9 @@
                 return;
             }
 
-            // Vérification des crédits
-            if (userCredits < 1) {
-                alert("❌ Crédits insuffisants ! Achetez des crédits pour continuer.");
+            // Vérification des essais
+            if (userTries < 1) {
+                alert("❌ Plus d'essais ! Achetez un code pour continuer.");
                 document.getElementById('shopSection').scrollIntoView({ behavior: 'smooth' });
                 return;
             }
@@ -428,7 +423,10 @@
                 const response = await fetch('/api/tryon', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ personImageBase64: personBase64, garmentImageBase64: garmentBase64 })
+                    body: JSON.stringify({ 
+                        personImageBase64: personBase64, 
+                        garmentImageBase64: garmentBase64 
+                    })
                 });
 
                 const data = await response.json();
@@ -437,9 +435,9 @@
                     throw new Error(data.error || `Erreur serveur: ${response.status}`);
                 }
 
-                // Déduire un crédit
-                userCredits--;
-                updateCreditsDisplay();
+                // Déduire un essai
+                userTries--;
+                updateTriesDisplay();
 
                 document.getElementById('resultImage').src = data.imageUrl;
                 resultCard.classList.remove('hidden');
@@ -459,7 +457,7 @@
 
         // ===== INITIALISATION =====
         document.addEventListener('DOMContentLoaded', function() {
-            updateCreditsDisplay();
+            updateTriesDisplay();
         });
     </script>
 </body>
