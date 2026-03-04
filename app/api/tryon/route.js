@@ -9,7 +9,7 @@ export async function POST(request) {
     console.log("✅ Images reçues, userId:", userId)
 
     if (!personImageBase64 || !garmentImageBase64) {
-      return new Response(JSON.stringify({ error: 'Images manquantes' }), { 
+      return new Response(JSON.stringify({ error: 'Images manquantes' }), {
         status: 400,
         headers: { 'Content-Type': 'application/json' }
       })
@@ -17,9 +17,10 @@ export async function POST(request) {
 
     // Configurer Fal.ai avec la clé API
     const apiKey = process.env.FAL_KEY
+    console.log("🔑 Clé API présente:", !!apiKey)
+
     if (!apiKey) {
-      console.error("❌ Clé API Fal.ai manquante")
-      return new Response(JSON.stringify({ error: 'Configuration API manquante' }), { 
+      return new Response(JSON.stringify({ error: 'Configuration API manquante' }), {
         status: 500,
         headers: { 'Content-Type': 'application/json' }
       })
@@ -58,8 +59,11 @@ export async function POST(request) {
       throw new Error('Aucune image générée')
     }
 
+    const imageUrl = result.data.images[0].url
+    console.log("✅ Image générée:", imageUrl)
+
     return new Response(JSON.stringify({ 
-      imageUrl: result.data.images[0].url 
+      imageUrl: imageUrl 
     }), { 
       status: 200,
       headers: { 'Content-Type': 'application/json' }
