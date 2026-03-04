@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>EssayageAI - Essayez vos vêtements</title>
+    <title>EssayageAI - Essayez vos vêtements par IA</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
         .loading-spinner {
@@ -35,6 +35,19 @@
             border-color: #48bb78;
             background-color: #f0fff4;
         }
+        .tip-enter {
+            animation: slideIn 0.3s ease;
+        }
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateY(-10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
     </style>
 </head>
 <body class="bg-gray-50 min-h-screen">
@@ -60,6 +73,23 @@
         <h1 class="text-3xl font-bold text-center mb-8">
             Essayez vos vêtements <span class="text-blue-600">instantanément</span>
         </h1>
+
+        <!-- Zone des conseils (visible au début) -->
+        <div id="initialTips" class="bg-blue-50 rounded-xl p-4 mb-6">
+            <h3 class="font-bold text-blue-800 mb-2 flex items-center">
+                <svg class="w-5 h-5 mr-2" fill="currentColor" viewBox="0 0 20 20">
+                    <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clip-rule="evenodd"/>
+                </svg>
+                📸 Conseils pour de meilleurs résultats :
+            </h3>
+            <ul class="text-blue-700 text-sm space-y-1">
+                <li>• Placez le vêtement à plat sur un fond clair</li>
+                <li>• Évitez les ombres et les plis</li>
+                <li>• Préférez la lumière naturelle</li>
+                <li>• Tenez-vous droit, visage bien visible</li>
+                <li>• Évitez les vêtements trop amples sur votre photo</li>
+            </ul>
+        </div>
 
         <!-- Zone d'upload -->
         <div class="bg-white rounded-xl shadow-lg p-6 mb-8">
@@ -105,6 +135,9 @@
             <!-- Message de succès temporaire -->
             <div id="successMessage" class="hidden mt-4 p-4 bg-green-50 text-green-700 rounded-lg text-center"></div>
 
+            <!-- Zone des conseils personnalisés (apparaît après analyse) -->
+            <div id="tipsContainer" class="hidden mt-4 p-4 bg-blue-50 rounded-lg tip-enter"></div>
+
             <!-- Bouton d'essai -->
             <button id="tryButton" onclick="tryOn()" disabled
                     class="mt-6 w-full bg-blue-600 text-white py-4 px-6 rounded-xl font-bold text-lg 
@@ -125,6 +158,10 @@
         <div id="resultCard" class="hidden bg-white rounded-xl shadow-lg p-6">
             <h2 class="text-2xl font-bold mb-4 text-center text-gray-800">✨ Résultat ✨</h2>
             <img id="resultImage" src="" alt="Résultat de l'essayage" class="max-h-[500px] mx-auto rounded-lg shadow-lg">
+            
+            <!-- Conseils post-résultat -->
+            <div id="postResultTips" class="hidden mt-4 p-4 bg-blue-50 rounded-lg text-sm"></div>
+            
             <div class="flex justify-center mt-6 space-x-4">
                 <button onclick="resetUpload()" class="bg-gray-600 text-white px-6 py-2 rounded-lg hover:bg-gray-700 transition">
                     🔄 Nouvel essai
@@ -177,8 +214,34 @@
                 }
                 
                 updateButtonState();
+                
+                // Afficher des conseils basés sur la taille
+                showSizeTips(file, previewId);
             };
             reader.readAsDataURL(file);
+        }
+
+        // Fonction pour afficher des conseils basés sur la taille
+        function showSizeTips(file, previewId) {
+            const sizeKB = file.size / 1024;
+            const tipsContainer = document.getElementById('tipsContainer');
+            
+            let tip = '';
+            if (previewId === 'personPreview') {
+                if (sizeKB < 100) {
+                    tip = '📸 Votre photo est un peu petite. Pour un meilleur résultat, prenez une photo avec plus de détails.';
+                }
+            } else {
+                if (sizeKB < 50) {
+                    tip = '👕 La photo du vêtement est un peu floue. Essayez de la reprendre avec un meilleur éclairage.';
+                }
+            }
+            
+            if (tip) {
+                tipsContainer.innerHTML = `<p class="text-blue-700">${tip}</p>`;
+                tipsContainer.classList.remove('hidden');
+                setTimeout(() => tipsContainer.classList.add('hidden'), 5000);
+            }
         }
 
         // Activer/désactiver le bouton selon que les 2 photos sont chargées
@@ -219,8 +282,10 @@
             document.getElementById('personZone').classList.remove('has-image');
             document.getElementById('garmentZone').classList.remove('has-image');
             
-            // Cacher le résultat
+            // Cacher le résultat et les conseils
             document.getElementById('resultCard').classList.add('hidden');
+            document.getElementById('tipsContainer').classList.add('hidden');
+            document.getElementById('postResultTips').classList.add('hidden');
             
             updateButtonState();
         }
@@ -247,16 +312,19 @@
             const errorDiv = document.getElementById('errorMessage');
             const successDiv = document.getElementById('successMessage');
             const resultCard = document.getElementById('resultCard');
+            const tipsContainer = document.getElementById('tipsContainer');
+            const postResultTips = document.getElementById('postResultTips');
             
             button.disabled = true;
             loading.classList.remove('hidden');
             errorDiv.classList.add('hidden');
             successDiv.classList.add('hidden');
             resultCard.classList.add('hidden');
+            tipsContainer.classList.add('hidden');
+            postResultTips.classList.add('hidden');
 
             try {
                 console.log("📤 Conversion des photos en Base64...");
-                // Convertir les fichiers en Base64
                 const personBase64 = await fileToBase64(personFile);
                 const garmentBase64 = await fileToBase64(garmentFile);
 
@@ -287,7 +355,26 @@
                 resultImage.src = data.imageUrl;
                 resultCard.classList.remove('hidden');
                 
-                // Message de succès temporaire
+                // Afficher les conseils si présents
+                if (data.tips) {
+                    let tipsHTML = '<h4 class="font-bold text-blue-800 mb-2">💡 Conseils personnalisés :</h4>';
+                    
+                    if (data.tips.person && data.tips.person.length > 0) {
+                        data.tips.person.forEach(tip => {
+                            tipsHTML += `<p class="text-blue-700 text-sm mb-1">${tip}</p>`;
+                        });
+                    }
+                    if (data.tips.garment && data.tips.garment.length > 0) {
+                        data.tips.garment.forEach(tip => {
+                            tipsHTML += `<p class="text-blue-700 text-sm mb-1">${tip}</p>`;
+                        });
+                    }
+                    
+                    postResultTips.innerHTML = tipsHTML;
+                    postResultTips.classList.remove('hidden');
+                }
+                
+                // Message de succès
                 successDiv.textContent = "✨ Essayage réussi !";
                 successDiv.classList.remove('hidden');
                 setTimeout(() => successDiv.classList.add('hidden'), 3000);
