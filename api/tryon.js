@@ -1,4 +1,29 @@
-// api/tryon.js - Version avec fetch direct (sans SDK buggé)
+// api/tryon.js - Version 100% sans SDK Fal.ai
+const fetch = require('node-fetch');
+
+// Fonction pour uploader une image directement vers Fal.ai via leur API REST
+async function uploadImage(buffer, apiKey) {
+    // Créer un FormData
+    const formData = new FormData();
+    const blob = new Blob([buffer], { type: 'image/jpeg' });
+    formData.append('file', blob, 'image.jpg');
+
+    const response = await fetch('https://fal.ai/storage/upload', {
+        method: 'POST',
+        headers: {
+            'Authorization': `Key ${apiKey}`
+        },
+        body: formData
+    });
+
+    if (!response.ok) {
+        throw new Error(`Upload failed: ${response.status}`);
+    }
+
+    const data = await response.json();
+    return data.url; // L'URL publique de l'image
+}
+
 module.exports = async (req, res) => {
     // Configuration CORS
     res.setHeader('Access-Control-Allow-Origin', 'https://essayageai-app.vercel.app');
@@ -10,24 +35,32 @@ module.exports = async (req, res) => {
 
     try {
         const { personImageBase64, garmentImageBase64 } = req.body;
+        const apiKey = process.env.FAL_KEY;
 
-        // 1. Upload des images (on garde cette partie qui fonctionne)
-        const { fal } = require('@fal-ai/client');
-        fal.config({ credentials: process.env.FAL_KEY });
+        if (!apiKey) {
+            throw new Error('FAL_KEY manquante');
+        }
 
+        // 1. Convertir base64 en buffers
         const personBuffer = Buffer.from(personImageBase64.split(',')[1], 'base64');
         const garmentBuffer = Buffer.from(garmentImageBase64.split(',')[1], 'base64');
 
-        const personUrl = await fal.storage.upload(personBuffer, { contentType: 'image/jpeg' });
-        const garmentUrl = await fal.storage.upload(garmentBuffer, { contentType: 'image/jpeg' });
+        console.log('📤 Upload des images...');
+
+        // 2. Uploader les images via API REST
+        const [personUrl, garmentUrl] = await Promise.all([
+            uploadImage(personBuffer, apiKey),
+            uploadImage(garmentBuffer, apiKey)
+        ]);
 
         console.log('✅ Images uploadées:', { personUrl, garmentUrl });
 
-        // 2. Appel direct à l'API REST (contourne le SDK buggé)
+        // 3. Appel à l'API Virtual Try-On
+        console.log('🤖 Appel au modèle...');
         const response = await fetch('https://fal.run/fal-ai/image-apps-v2/virtual-try-on', {
             method: 'POST',
             headers: {
-                'Authorization': `Key ${process.env.FAL_KEY}`,
+                'Authorization': `Key ${apiKey}`,
                 'Content-Type': 'application/json'
             },
             body: JSON.stringify({
@@ -39,11 +72,11 @@ module.exports = async (req, res) => {
         const data = await response.json();
 
         if (!response.ok) {
-            console.error('❌ Réponse Fal.ai non-OK:', data);
+            console.error('❌ Réponse Fal.ai:', data);
             throw new Error(data.error || `Erreur API: ${response.status}`);
         }
 
-        console.log('✅ Réponse Fal.ai:', data);
+        console.log('✅ Réponse reçue');
 
         if (!data.images?.length) {
             throw new Error('Aucune image générée');
@@ -54,15 +87,9 @@ module.exports = async (req, res) => {
         });
 
     } catch (error) {
-        console.error('❌ Erreur détaillée:', {
-            message: error.message,
-            stack: error.stack,
-            response: error.response
-        });
-        
+        console.error('❌ Erreur:', error);
         return res.status(500).json({ 
-            error: error.message || 'Erreur serveur',
-            details: error.toString()
+            error: error.message || 'Erreur serveur'
         });
     }
 };
