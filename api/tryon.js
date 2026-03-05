@@ -1,14 +1,15 @@
-// api/tryon.js - Version 100% sans SDK Fal.ai
+// api/tryon.js - Version avec la bonne URL d'upload
 const fetch = require('node-fetch');
 
-// Fonction pour uploader une image directement vers Fal.ai via leur API REST
+// Fonction pour uploader une image directement vers Fal.ai
 async function uploadImage(buffer, apiKey) {
     // Créer un FormData
     const formData = new FormData();
     const blob = new Blob([buffer], { type: 'image/jpeg' });
     formData.append('file', blob, 'image.jpg');
 
-    const response = await fetch('https://fal.ai/storage/upload', {
+    // ✅ URL CORRECTE pour l'upload
+    const response = await fetch('https://storage.fal.ai/upload', {
         method: 'POST',
         headers: {
             'Authorization': `Key ${apiKey}`
@@ -17,7 +18,8 @@ async function uploadImage(buffer, apiKey) {
     });
 
     if (!response.ok) {
-        throw new Error(`Upload failed: ${response.status}`);
+        const errorText = await response.text();
+        throw new Error(`Upload failed (${response.status}): ${errorText}`);
     }
 
     const data = await response.json();
@@ -47,7 +49,7 @@ module.exports = async (req, res) => {
 
         console.log('📤 Upload des images...');
 
-        // 2. Uploader les images via API REST
+        // 2. Uploader les images
         const [personUrl, garmentUrl] = await Promise.all([
             uploadImage(personBuffer, apiKey),
             uploadImage(garmentBuffer, apiKey)
