@@ -1,4 +1,4 @@
-// api/tryon.js - VERSION FINALE STABLE
+// api/tryon.js - VERSION CORRIGÉE
 const { fal } = require('@fal-ai/client');
 
 module.exports = async (req, res) => {
@@ -13,6 +13,10 @@ module.exports = async (req, res) => {
     try {
         const { personImageBase64, garmentImageBase64 } = req.body;
 
+        if (!personImageBase64 || !garmentImageBase64) {
+            return res.status(400).json({ error: 'Images manquantes dans la requête' });
+        }
+
         // Configurer Fal.ai
         const apiKey = process.env.FAL_KEY;
         if (!apiKey) {
@@ -20,9 +24,12 @@ module.exports = async (req, res) => {
         }
         fal.config({ credentials: apiKey });
 
-        // Convertir base64 en buffers
-        const personBuffer = Buffer.from(personImageBase64.split(',')[1], 'base64');
-        const garmentBuffer = Buffer.from(garmentImageBase64.split(',')[1], 'base64');
+        // Nettoyage et conversion base64 en buffers
+        // On s'assure de retirer le prefixe data:image/...;base64, si présent
+        const cleanBase64 = (str) => str.includes(',') ? str.split(',')[1] : str;
+        
+        const personBuffer = Buffer.from(cleanBase64(personImageBase64), 'base64');
+        const garmentBuffer = Buffer.from(cleanBase64(garmentImageBase64), 'base64');
 
         // Upload vers Fal.ai
         console.log('📤 Upload des images...');
@@ -31,28 +38,37 @@ module.exports = async (req, res) => {
         console.log('✅ Images uploadées');
 
         // Appel à l'API Virtual Try-On
+        // CORRECTION : Utilisation de la signature (modelId, config)
         console.log('🤖 Appel au modèle...');
-        const result = await fal.subscribe({
-            modelId: "fal-ai/image-apps-v2/virtual-try-on",
+        const result = await fal.subscribe("fal-ai/image-apps-v2/virtual-try-on", {
             input: {
                 person_image_url: personUrl,
                 clothing_image_url: garmentUrl
-            }
+            },
+            // On passe un objet d'options vide pour éviter l'erreur de déstructuration de 'webhookUrl'
+            options: {} 
         });
 
         console.log('✅ Réponse reçue');
 
-        if (!result.data?.images?.length) {
-            throw new Error('Aucune image générée');
+        // Extraction de l'URL (Vérification de plusieurs chemins possibles selon la version du SDK)
+        const outputImage = result.images?.[0]?.url || result.data?.images?.[0]?.url;
+
+        if (!outputImage) {
+            console.error('Résultat complet pour debug:', JSON.stringify(result));
+            throw new Error('Aucune image générée dans la réponse de Fal.ai');
         }
 
         // Retourner l'URL de l'image générée
         res.status(200).json({ 
-            imageUrl: result.data.images[0].url 
+            imageUrl: outputImage 
         });
 
     } catch (error) {
-        console.error('❌ Erreur:', error);
-        res.status(500).json({ error: error.message });
+        console.error('❌ Erreur détaillée:', error);
+        res.status(500).json({ 
+            error: error.message,
+            stack: process.env.NODE_ENV === 'development' ? error.stack : undefined 
+        });
     }
 };
