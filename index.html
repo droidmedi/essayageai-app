@@ -59,9 +59,16 @@
             font-weight: bold;
             white-space: nowrap;
         }
+        .logo {
+            max-height: 40px;
+            width: auto;
+        }
         @media (max-width: 768px) {
             .offer-card {
                 margin-bottom: 20px;
+            }
+            .logo {
+                max-height: 30px;
             }
         }
     </style>
@@ -71,8 +78,8 @@
     <nav class="bg-white shadow-lg sticky top-0 z-50">
         <div class="max-w-6xl mx-auto px-4 py-3">
             <div class="flex justify-between items-center">
-                <div class="text-2xl font-bold">
-                    <span class="text-blue-600">👕 Essayage</span><span class="text-gray-800">AI</span>
+                <div class="flex items-center space-x-2">
+                    <img src="https://ik.imagekit.io/fwmsbpxje/logos/logo%20essayageai.png" alt="EssayageAI Logo" class="logo">
                 </div>
                 <div class="flex items-center space-x-4">
                     <span class="text-sm text-gray-600">Essais: <span id="triesDisplay" class="font-bold text-blue-600">0</span></span>
@@ -200,7 +207,7 @@
             <!-- Message d'erreur -->
             <div id="errorMessage" class="hidden mt-4 p-4 bg-red-50 text-red-700 rounded-lg text-center"></div>
 
-            <!-- Message de succès temporaire -->
+            <!-- Message de succès -->
             <div id="successMessage" class="hidden mt-4 p-4 bg-green-50 text-green-700 rounded-lg text-center"></div>
 
             <!-- Bouton d'essai -->
@@ -234,6 +241,13 @@
             </div>
         </div>
     </div>
+
+    <footer class="bg-white border-t mt-12 py-6">
+        <div class="max-w-6xl mx-auto px-4 text-center text-gray-600">
+            <img src="https://ik.imagekit.io/fwmsbpxje/logos/logo%20essayageai.png" alt="EssayageAI Logo" class="logo mx-auto mb-4">
+            <p>&copy; 2026 EssayageAI. Tous droits réservés.</p>
+        </div>
+    </footer>
 
     <script>
         // ===== VARIABLES GLOBALES =====
@@ -334,7 +348,7 @@
                 const response = await fetch('/api/create-payment', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ tries, price, plan: `${tries}essais` })
+                    body: JSON.stringify({ tries, price })
                 });
 
                 const data = await response.json();
